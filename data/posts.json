@@ -1,0 +1,46 @@
+[
+  {
+    "slug": "testing-react-server-components",
+    "title": "Testing React Server Components",
+    "excerpt": "Server Components changed how I think about data fetching in React — no more client-side waterfalls just to render a list.",
+    "coverImage": "/images/blog/testing-react-server-components/cover.svg",
+    "tags": ["React", "Next.js", "Architecture"],
+    "publishedAt": "2026-08-01",
+    "updatedAt": null,
+    "published": true,
+    "readingTimeMinutes": 6
+  },
+  {
+    "slug": "css-grid-deep-dive",
+    "title": "A Deep Dive into CSS Grid",
+    "excerpt": "Grid solved layout problems that used to require hacky float or flexbox workarounds — here's why I reach for it by default now.",
+    "coverImage": "",
+    "tags": ["CSS"],
+    "publishedAt": "2026-07-18",
+    "updatedAt": null,
+    "published": true,
+    "readingTimeMinutes": 4
+  },
+  {
+    "slug": "thoughts-on-remote-work",
+    "title": "Three Years of Remote Work: What Actually Works and What Doesn't, a Longer Title to Test Truncation",
+    "excerpt": "I've been working remotely for three years now, and my opinions on it have shifted more than once — here's where I've landed, for now at least.",
+    "coverImage": "/images/blog/thoughts-on-remote-work/cover.svg",
+    "tags": ["Opinion", "Career"],
+    "publishedAt": "2026-06-30",
+    "updatedAt": "2026-07-02",
+    "published": true,
+    "readingTimeMinutes": 5
+  },
+  {
+    "slug": "draft-upcoming-redesign",
+    "title": "Draft: Upcoming Redesign Thoughts",
+    "excerpt": "Early notes on a possible redesign — not ready to publish yet.",
+    "coverImage": "",
+    "tags": ["Notes"],
+    "publishedAt": "2026-08-10",
+    "updatedAt": null,
+    "published": false,
+    "readingTimeMinutes": 2
+  }
+]

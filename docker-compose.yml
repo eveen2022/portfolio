@@ -1,0 +1,12 @@
+services:
+  portfolio:
+    build: .
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env.local
+    volumes:
+      - ./data:/app/data
+      - ./public/images:/app/public/images
+      - ./public/resume.pdf:/app/public/resume.pdf
+    restart: unless-stopped

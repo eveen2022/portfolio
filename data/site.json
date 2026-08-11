@@ -1,0 +1,18 @@
+{
+  "name": "Eveen Peiris",
+  "role": "Software Engineer",
+  "tagline": "I build reliable, well-crafted software for the web.",
+  "bio": "Write a couple of sentences here about your background, what you work on, and what you're interested in. Edit this from /admin/settings.",
+  "description": "Portfolio of a software engineer — projects, blog, and background.",
+  "email": "your-email@example.com",
+  "phone": "",
+  "location": "",
+  "workArrangement": [
+    "Hybrid"
+  ],
+  "social": {
+    "github": "https://github.com/your-username",
+    "linkedin": "https://linkedin.com/in/your-username",
+    "twitter": ""
+  }
+}

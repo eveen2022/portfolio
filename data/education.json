@@ -1,0 +1,119 @@
+[
+  {
+    "id": "education-1786462793174",
+    "type": "education",
+    "organization": "SLIIT CITY UNI",
+    "role": "Higher Diploma in Information Technology",
+    "location": "13th Floor , BOC merchant tower, 28 St Michaels Rd, Colombo 00300",
+    "startDate": "2021-01",
+    "endDate": "2025-10",
+    "current": false,
+    "description": "A Higher Diploma in Information Technology from SLIIT City Uni, providing a broad foundation in computing, software development, networking, databases, and information technology, with both theoretical and practical academic learning.",
+    "highlights": [
+      "Successfully completed all prescribed requirements",
+      "69 academic credits completed",
+      "English-medium program",
+      "Qualification completed in October 2025",
+      "Broad foundation in Information Technology and computing",
+      "Developed practical and theoretical knowledge across multiple areas of IT",
+      "Completed academic studies at SLIIT City Uni",
+      "Progressed through a comprehensive Higher Diploma curriculum"
+    ],
+    "logo": "/images/experience/sliit-city-uni-1786462959812-ieza01.png",
+    "coverImage": "/images/experience/sliit-city-uni-cover-1786462952415-8bo3ot.png",
+    "showGpa": true,
+    "gpa": "2.10",
+    "gradesByYear": [
+      {
+        "year": "Year 1",
+        "courses": [
+          {
+            "name": "Introduction to Programming (C/C++)",
+            "grade": "C"
+          },
+          {
+            "name": "Fundamentals of Information Technology",
+            "grade": "C"
+          },
+          {
+            "name": "Computer Programming Techniques and Practices",
+            "grade": "C"
+          },
+          {
+            "name": "Business English & Communication Skills",
+            "grade": "B-"
+          },
+          {
+            "name": "Mathematics for Computing",
+            "grade": "C"
+          },
+          {
+            "name": "Data Communications & Computer Networks I",
+            "grade": "C"
+          },
+          {
+            "name": "Object Oriented Analysis & Design",
+            "grade": "C"
+          },
+          {
+            "name": "Object Oriented Programming (JAVA)",
+            "grade": "C"
+          },
+          {
+            "name": "Database Management Systems",
+            "grade": "C"
+          },
+          {
+            "name": "Technical Communication",
+            "grade": "B+"
+          }
+        ]
+      },
+      {
+        "year": "Year 2",
+        "courses": [
+          {
+            "name": "Web Application Development",
+            "grade": "C"
+          },
+          {
+            "name": "Design & Analysis of Algorithms",
+            "grade": "C"
+          },
+          {
+            "name": "Operating Systems",
+            "grade": "C"
+          },
+          {
+            "name": "Emerging Technologies and Frameworks",
+            "grade": "C"
+          },
+          {
+            "name": "Human Computer Interaction",
+            "grade": "C"
+          },
+          {
+            "name": "TCP/IP Networking Concepts",
+            "grade": "C"
+          },
+          {
+            "name": "Data Systems",
+            "grade": "C"
+          },
+          {
+            "name": "Project & Professional Practice",
+            "grade": "B-"
+          },
+          {
+            "name": "Data Structures and Algorithms",
+            "grade": "C"
+          },
+          {
+            "name": "Computer Security",
+            "grade": "C"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "work-techcorp-solutions",
+    "type": "work",
+    "organization": "TechCorp Solutions",
+    "role": "Senior Software Engineer",
+    "location": "Remote",
+    "startDate": "2024-03",
+    "endDate": null,
+    "current": true,
+    "description": "Leading development of the internal platform team's core services, mentoring two engineers, and driving the migration from a monolith to a set of focused services.",
+    "highlights": [
+      "Cut average API response time by 45% after a targeted caching pass",
+      "Led migration of the legacy monolith's billing module to a standalone service",
+      "Mentored two junior engineers, both promoted within a year"
+    ],
+    "logo": "/images/experience/techcorp-logo.svg",
+    "coverImage": "/images/experience/techcorp-cover.svg"
+  },
+  {
+    "id": "work-startupxyz",
+    "type": "work",
+    "organization": "StartupXYZ",
+    "role": "Software Developer",
+    "location": "Hybrid",
+    "startDate": "2022-01",
+    "endDate": "2024-02",
+    "current": false,
+    "description": "Full-stack development on a small product team, shipping features end to end from design handoff to production.",
+    "highlights": [
+      "Built the company's first public API, now used by three partner integrations",
+      "Reduced CI pipeline time by 30% through test parallelization",
+      "Shipped a real-time notifications system used daily by all customers"
+    ],
+    "logo": "/images/experience/startupxyz-logo.svg",
+    "coverImage": ""
+  },
+  {
+    "id": "work-webagency-co",
+    "type": "work",
+    "organization": "WebAgency Co",
+    "role": "Junior Developer",
+    "location": "On-site",
+    "startDate": "2020-06",
+    "endDate": "2021-12",
+    "current": false,
+    "description": "Built and maintained marketing websites for small business clients, working directly with designers and account managers.",
+    "highlights": [
+      "Delivered over 20 client websites on tight turnarounds",
+      "Introduced a shared component library that cut new-project setup time in half"
+    ],
+    "logo": "",
+    "coverImage": ""
+  },
+  {
+    "id": "work-freelance",
+    "type": "work",
+    "organization": "Freelance",
+    "role": "Web Developer",
+    "location": "Remote",
+    "startDate": "2019-01",
+    "endDate": "2020-05",
+    "current": false,
+    "description": "Independent contract work building small business websites and simple internal tools.",
+    "highlights": [
+      "Delivered projects for six different small business clients",
+      "Handled the full client relationship: scoping, invoicing, and support"
+    ],
+    "logo": "",
+    "coverImage": ""
+  }
+]
