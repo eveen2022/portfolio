@@ -23,6 +23,11 @@ export type Project = {
   // badge only actually shows while the automatic conditions also hold (see
   // src/lib/newBadge.ts) — turning this off always hides it.
   isNew: boolean;
+  // SEO overrides — fall back to title/description when blank. noIndex hides
+  // the page from search engines without hiding it from visitors.
+  seoTitle?: string;
+  seoDescription?: string;
+  noIndex: boolean;
 };
 
 export type Post = {
@@ -35,6 +40,12 @@ export type Post = {
   updatedAt: string | null;
   published: boolean;
   readingTimeMinutes: number;
+  order: number;
+  // SEO overrides — fall back to title/excerpt when blank. noIndex hides
+  // the page from search engines without hiding it from visitors.
+  seoTitle?: string;
+  seoDescription?: string;
+  noIndex: boolean;
 };
 
 export type SkillLevel = "beginner" | "intermediate" | "advanced";
@@ -70,6 +81,7 @@ export type TimelineEntry = {
   showGpa?: boolean;
   gpa?: string;
   gradesByYear?: YearGrades[];
+  order: number;
 };
 
 export const WORK_ARRANGEMENTS = ["Remote", "On-site", "Hybrid"] as const;
@@ -85,10 +97,39 @@ export type SiteConfig = {
   phone: string;
   location: string;
   workArrangement: WorkArrangement[];
+  photo: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+  notFoundMode: boolean;
+  // Shows/hides the "Share portfolio" button (native share sheet, copy
+  // link, QR code) that appears in the footer.
+  shareEnabled: boolean;
   social: {
     github: string;
     linkedin: string;
     twitter: string;
+    whatsapp: string;
+  };
+  sections: {
+    about: boolean;
+    skills: boolean;
+    projects: boolean;
+    blog: boolean;
+    experience: boolean;
+    education: boolean;
+    contact: boolean;
+  };
+  seo: {
+    // Default social-share image, used when a project/post has no cover
+    // image of its own. Falls back to `photo` if this is also blank.
+    ogImage: string;
+    // e.g. "@username" — used for Twitter Card attribution.
+    twitterHandle: string;
+    // Site-wide kill switch: tells every search engine not to index
+    // anything, and empties the sitemap. Useful pre-launch or on staging.
+    noIndex: boolean;
+    googleSiteVerification: string;
+    bingSiteVerification: string;
   };
 };
 
@@ -113,7 +154,8 @@ export type ActivityEntity =
   | "experience"
   | "education"
   | "settings"
-  | "message";
+  | "message"
+  | "privacy";
 
 export type ActivityEntry = {
   id: string;
@@ -126,4 +168,14 @@ export type ActivityEntry = {
 export type Analytics = {
   totalVisits: number;
   dailyVisits: Record<string, number>;
+  totalPageViews: number;
+  // Keyed by path (e.g. "/", "/projects/some-slug") — all-time, not
+  // date-bucketed, since the set of distinct paths on a portfolio is small
+  // and bounded by its content rather than by time.
+  pageViews: Record<string, number>;
+  // Keyed by referring hostname (e.g. "google.com"), or "Direct" for no
+  // referrer / same-site navigation — all-time.
+  referrers: Record<string, number>;
+  devices: { desktop: number; mobile: number; tablet: number };
+  browsers: Record<string, number>;
 };

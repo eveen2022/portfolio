@@ -4,7 +4,9 @@ import { useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MoreVertical, X, Sun, Moon, Monitor, Mail, Download } from "lucide-react";
+import { WhatsappIcon } from "@/components/icons/BrandIcons";
 import { cn } from "@/lib/cn";
 
 const themeCycle = ["light", "dark", "system"] as const;
@@ -22,11 +24,20 @@ function useMounted() {
   );
 }
 
-export function FloatingMenu() {
+export function FloatingMenu({
+  hideContact = false,
+  whatsapp = "",
+}: {
+  hideContact?: boolean;
+  whatsapp?: string;
+}) {
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
   const current = mounted ? ((theme as (typeof themeCycle)[number]) ?? "system") : "system";
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
+  const showContact = !isAdmin && !hideContact;
 
   return (
     <div className="fixed right-4 bottom-4 z-50 flex flex-col items-end gap-3 sm:right-6 sm:bottom-6">
@@ -69,13 +80,27 @@ export function FloatingMenu() {
               })}
             </div>
 
-            <Link
-              href="/contact"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 rounded-full px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-colors hover:bg-foreground/5 hover:text-accent"
-            >
-              <Mail className="size-4" /> Contact
-            </Link>
+            {showContact && (
+              <Link
+                href="/contact"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-full px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-colors hover:bg-foreground/5 hover:text-accent"
+              >
+                <Mail className="size-4" /> Contact
+              </Link>
+            )}
+
+            {showContact && whatsapp && (
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noreferrer noopener"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-full px-3 py-2.5 text-sm font-medium text-foreground-secondary transition-colors hover:bg-foreground/5 hover:text-accent"
+              >
+                <WhatsappIcon className="size-4" /> WhatsApp
+              </a>
+            )}
 
             <a
               href="/resume.pdf"

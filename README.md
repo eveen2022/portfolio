@@ -1,6 +1,6 @@
 # Portfolio
 
-A personal portfolio site built with Next.js (App Router) and Tailwind CSS, with a "liquid glass" animated UI, light/dark theme toggle, and a password-protected `/admin` panel for editing content. Content (projects, blog posts, skills, experience/education, site settings) lives in JSON files under `data/` and Markdown files under `content/blog/` instead of a database. Contact form submissions are appended to `data/messages.json`, trigger an email notification, and show up in the admin inbox.
+A personal portfolio site built with Next.js (App Router) and Tailwind CSS, with a "liquid glass" animated UI, light/dark theme toggle, and a password-protected `/admin` panel for editing content. Content (projects, blog posts, skills, experience/education, site settings, uploaded assets) is stored in MongoDB. Contact form submissions are saved the same way, trigger an email notification, and show up in the admin inbox.
 
 ## Getting Started
 
@@ -28,16 +28,11 @@ Auth is a single shared password (no per-user accounts) — appropriate for a si
 
 ## Content
 
-- `data/projects.json` — projects showcase
-- `data/posts.json` — blog post metadata (title, excerpt, tags, dates); the post body is the matching Markdown file in `content/blog/<slug>.md`
-- `data/skills.json` — skills grouped by category
-- `data/experience.json` / `data/education.json` — timeline entries
-- `data/site.json` — site owner's name, bio, contact info, and social links
-- `data/messages.json` — contact form submissions (written at runtime, do not hand-edit while the app is running)
-- `public/images/...` — project/blog/experience images (can also be uploaded through the admin panel)
-- `public/resume.pdf` — replace the placeholder with your real resume
+Everything is stored in MongoDB, one collection per content type — `projects`, `posts` (blog metadata; the post body itself is also stored as content, not a file on disk), `skills`, `experience`, `education`, `site` (owner's name, bio, contact info, social links, page-visibility toggles), `messages` (contact form submissions), `admin` (password hash + 2FA/recovery config), and `activity` (the admin History log). `public/images/...` still holds uploaded project/blog/experience images and the favicon; `public/resume.pdf` is the one file you should replace with your real resume before deploying.
 
-You can edit these files directly, or use `/admin`. Either way, blog/project pages are rendered dynamically (`export const dynamic = 'force-dynamic'`), so content-only changes show up without a rebuild.
+Edit content through `/admin` — there's no reason to touch the database directly. Pages are rendered dynamically (`export const dynamic = 'force-dynamic'`), so content-only changes show up without a rebuild.
+
+**Securing your database**: if you're using MongoDB Atlas's free tier, its network access list defaults to (or is often set to) "allow access from anywhere" during setup — restrict this to your deployment host's IP (or your own IP while developing) rather than leaving it open to the internet. A leaked or guessed `MONGODB_URI` is otherwise a direct path to every piece of content and the admin password hash.
 
 ## Environment Variables
 
@@ -45,14 +40,16 @@ Copy `.env.example` to `.env.local` and fill in the values you need:
 
 | Variable | Purpose |
 |---|---|
+| `MONGODB_URI` | MongoDB connection string (Atlas or self-hosted) — **required** |
+| `MONGODB_DB` | Database name (defaults to `portfolio` if unset) |
 | `EMAIL_PROVIDER` | `console` (default, logs instead of sending), `resend`, or `smtp` |
 | `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL` | Used when `EMAIL_PROVIDER=resend` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Used when `EMAIL_PROVIDER=smtp` |
 | `SITE_URL` | Used for `sitemap.ts`/`robots.ts` absolute URLs |
-| `ADMIN_PASSWORD` | Password required to log into `/admin` — **change before deploying** |
-| `SESSION_SECRET` | Random 32+ character string used to sign admin session cookies — **change before deploying** |
+| `ADMIN_PASSWORD` | Password required to log into `/admin` before it's ever been changed through the UI — **change before deploying** |
+| `SESSION_SECRET` | Random 32+ character string used to sign admin session/2FA/recovery cookies — **change before deploying** |
 
-With `EMAIL_PROVIDER=console` (the default), the app runs with zero email configuration — contact submissions are still saved to `data/messages.json`, and the would-be email is logged to the server console instead of sent.
+With `EMAIL_PROVIDER=console` (the default), the app runs with zero email configuration — contact submissions are still saved to the database, and the would-be email is logged to the server console instead of sent.
 
 ## Docker / Self-Hosting
 
@@ -60,7 +57,7 @@ With `EMAIL_PROVIDER=console` (the default), the app runs with zero email config
 docker compose up --build
 ```
 
-`docker-compose.yml` bind-mounts `./data` and `./public/images` (+ `resume.pdf`) into the container so contact-form writes, admin edits, and uploaded images persist across rebuilds. Run this as a **single container/replica** — the JSON write lock in `src/lib/fsWrite.ts` is per-process only and isn't safe across multiple concurrent instances. If you outgrow that, swap the JSON files under `data/` for a real database.
+`docker-compose.yml` bind-mounts `./public/images` (+ `resume.pdf`) into the container so uploaded images persist across rebuilds — all other content lives in MongoDB, external to the container, so it survives rebuilds regardless. Multiple replicas are safe to run against the same database; the only per-process state is the admin login/contact-form rate limiter (`src/lib/rateLimit.ts`), which just means rate limits aren't shared across replicas, not a correctness issue.
 
 ## Production Build
 

@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 type Status = "idle" | "submitting" | "success" | "error";
+
+const fieldClasses =
+  "rounded-xl border border-border bg-white/70 px-3.5 py-2.5 text-sm text-foreground transition-colors focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none dark:bg-card/60";
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
@@ -52,10 +56,17 @@ export function ContactForm() {
 
   if (status === "success") {
     return (
-      <p className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
-        Thanks for reaching out — your message has been sent. I&apos;ll get
-        back to you soon.
-      </p>
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="size-6" />
+        </span>
+        <div>
+          <p className="font-medium text-foreground">Message sent</p>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            Thanks for reaching out — I&apos;ll get back to you soon.
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -73,7 +84,7 @@ export function ContactForm() {
             required
             minLength={2}
             maxLength={100}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none dark:bg-card"
+            className={fieldClasses}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -86,7 +97,7 @@ export function ContactForm() {
             type="email"
             required
             maxLength={200}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none dark:bg-card"
+            className={fieldClasses}
           />
         </div>
       </div>
@@ -100,7 +111,7 @@ export function ContactForm() {
           name="subject"
           type="text"
           maxLength={150}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none dark:bg-card"
+          className={fieldClasses}
         />
       </div>
 
@@ -115,7 +126,7 @@ export function ContactForm() {
           minLength={10}
           maxLength={5000}
           rows={5}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none dark:bg-card"
+          className={fieldClasses}
         />
       </div>
 

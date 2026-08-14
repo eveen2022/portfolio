@@ -23,8 +23,7 @@
   --glass-border: rgba(29, 29, 31, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.95);
   --glass-shadow:
-    0 12px 40px rgba(29, 29, 31, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 12px 40px rgba(29, 29, 31, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 
   --grid-line: rgba(29, 29, 31, 0.05);
   --grain-opacity: 0.07;
@@ -55,8 +54,7 @@
   --glass-border: rgba(245, 245, 247, 0.08);
   --glass-highlight: rgba(245, 245, 247, 0.14);
   --glass-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
   --grid-line: rgba(245, 245, 247, 0.045);
   --grain-opacity: 0.08;
@@ -134,27 +132,32 @@ body {
    utilities live in @layer utilities, which ALWAYS loses to unlayered CSS
    regardless of source order — hardcoding position here would silently
    override `fixed`/`absolute` utilities applied on the same element. */
+/* Blur/saturate values below are deliberately lower than they look like they
+   "should" be — backdrop-filter is a heavy, continuously-resampled compositor
+   effect (much more so in Firefox than Chromium), and this is applied to 30+
+   surfaces across the site including fixed, always-mounted chrome. Keep these
+   as low as the design can tolerate rather than pushing them back up. */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
 }
 
 .glass-header {
   background: var(--glass-bg);
   border-bottom: 1px solid var(--glass-border);
-  -webkit-backdrop-filter: blur(36px) saturate(200%);
-  backdrop-filter: blur(36px) saturate(200%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  backdrop-filter: blur(26px) saturate(160%);
 }
 
 .glass-strong {
   background: var(--glass-bg-strong);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  -webkit-backdrop-filter: blur(52px) saturate(220%);
-  backdrop-filter: blur(52px) saturate(220%);
+  -webkit-backdrop-filter: blur(36px) saturate(170%);
+  backdrop-filter: blur(36px) saturate(170%);
 }
 
 /* Authentic frosted-glass grain — real frosted glass scatters light unevenly;
@@ -167,7 +170,7 @@ body {
   /* Without this, the pseudo-element stays square and pokes out past
      rounded-full/rounded-2xl corners as a visible translucent box. */
   border-radius: inherit;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
   pointer-events: none;
@@ -244,6 +247,13 @@ body {
   background-size: 28px 28px;
 }
 
+/* These blur radii are kept deliberately modest (not the 110-120px it might
+   take to "properly" smooth a blob this size) because these three shapes
+   animate forever, directly beneath the fixed glass header/nav — Firefox
+   re-rasterizes `filter: blur()` far more expensively than Chromium,
+   especially every frame under a moving element. will-change hints the
+   compositor to keep each blob on its own GPU layer instead of repainting
+   the whole background stack per frame. */
 .tech-bg::before,
 .tech-bg::after {
   content: "";
@@ -251,8 +261,9 @@ body {
   width: 60vmax;
   height: 60vmax;
   border-radius: 9999px;
-  filter: blur(110px);
+  filter: blur(64px);
   opacity: 0.3;
+  will-change: transform;
   animation: aurora-drift 24s ease-in-out infinite alternate;
 }
 
@@ -278,9 +289,18 @@ body {
   border-radius: 9999px;
   transform: translateX(-50%);
   background: radial-gradient(circle, var(--aurora-2), transparent 70%);
-  filter: blur(120px);
+  filter: blur(70px);
   opacity: 0.22;
+  will-change: transform;
   animation: aurora-drift 28s ease-in-out infinite alternate-reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-bg::before,
+  .tech-bg::after,
+  .tech-bg .tech-bg-mid {
+    animation: none;
+  }
 }
 
 @keyframes aurora-drift {
@@ -312,6 +332,63 @@ body {
   50%,
   100% {
     opacity: 0;
+  }
+}
+
+/* --- Per-section decorative background glow (distinct from .tech-bg) ---
+   Small, cheap blur radius on purpose — see the .tech-bg comment above and
+   the .glass comment further up: large animating blurs are expensive to
+   keep repainting, especially in Firefox. These sit in normal document flow
+   (not fixed), so the cost is bounded to whatever's currently in viewport. */
+.glow-orb {
+  filter: blur(56px);
+  opacity: 0.25;
+  will-change: transform;
+  animation: orb-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes orb-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-1.25rem, 1.25rem) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-orb {
+    animation: none;
+  }
+}
+
+/* --- Custom cursor (site-only; see CustomCursor.tsx, mounted in the (site)
+   layout, never on /admin) — toggled on by JS only when the device reports
+   a fine pointer, so this never hides the cursor on touch devices or when
+   JS hasn't run yet. */
+.custom-cursor-active,
+.custom-cursor-active * {
+  cursor: none !important;
+}
+
+/* Gentle float used by the 404 and maintenance pages' icon badges. */
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow {
+    animation: none;
   }
 }
 

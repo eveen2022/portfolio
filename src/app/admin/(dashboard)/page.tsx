@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FolderKanban, Newspaper, Inbox, Mail, Eye, CalendarDays, ArrowUpRight } from "lucide-react";
 import { getProjects, getAllPosts, getMessages, getAnalytics, getSiteConfig } from "@/lib/data";
 import { Card } from "@/components/admin/form";
+import { StorageCard } from "@/components/admin/StorageCard";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -23,12 +24,14 @@ export default async function AdminDashboardPage() {
     {
       label: "Total site visits",
       value: analytics.totalVisits,
+      href: "/admin/analytics",
       icon: Eye,
       badge: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
     },
     {
       label: "Visits today",
       value: visitsToday,
+      href: "/admin/analytics",
       icon: CalendarDays,
       badge: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
     },
@@ -111,6 +114,10 @@ export default async function AdminDashboardPage() {
             <div key={stat.label}>{content}</div>
           );
         })}
+      </div>
+
+      <div className="mt-4">
+        <StorageCard />
       </div>
     </div>
   );

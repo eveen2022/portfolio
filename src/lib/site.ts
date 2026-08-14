@@ -7,6 +7,7 @@ export const siteMeta = {
     { label: "About", href: "/about" },
     { label: "Projects", href: "/projects" },
     { label: "Experience", href: "/experience" },
+    { label: "Education", href: "/education" },
     { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
   ],

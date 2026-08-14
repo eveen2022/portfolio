@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // the VERCEL env var automatically during its builds, so this only
   // applies when building for Docker, not when building on Vercel.
   output: process.env.VERCEL ? undefined : "standalone",
+  // Next sets "X-Powered-By: Next.js" by default — trivial fingerprinting
+  // aid for no benefit.
+  poweredByHeader: false,
 };
 
 export default nextConfig;

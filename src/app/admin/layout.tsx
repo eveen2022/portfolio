@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { ToastProvider } from "@/components/admin/toast/ToastProvider";
+import { ConfirmProvider } from "@/components/admin/confirm/ConfirmProvider";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -11,11 +13,15 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-full">
-      <div className="tech-bg" aria-hidden="true">
-        <div className="tech-bg-mid" />
-      </div>
-      {children}
-    </div>
+    <ToastProvider>
+      <ConfirmProvider>
+        <div className="relative min-h-full">
+          <div className="tech-bg" aria-hidden="true">
+            <div className="tech-bg-mid" />
+          </div>
+          {children}
+        </div>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 }

@@ -1,8 +1,6 @@
 import { getSiteConfig } from "@/lib/data";
-import { SettingsForm } from "@/components/admin/settings/SettingsForm";
-import { ResumeUpload } from "@/components/admin/settings/ResumeUpload";
-import { FaviconUpload } from "@/components/admin/settings/FaviconUpload";
-import { ChangePasswordForm } from "@/components/admin/settings/ChangePasswordForm";
+import { SettingsPageClient } from "@/components/admin/settings/SettingsPageClient";
+import { StorageCard } from "@/components/admin/StorageCard";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +9,12 @@ export default async function AdminSettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-8 text-2xl font-semibold text-foreground">
-        Settings
-      </h1>
-      <div className="flex max-w-2xl flex-col gap-8">
-        <SettingsForm initial={config} />
-        <ResumeUpload />
-        <FaviconUpload />
-        <ChangePasswordForm />
-      </div>
+      <h1 className="mb-1 text-2xl font-semibold text-foreground">Settings</h1>
+      <p className="mb-8 text-sm text-muted">
+        Manage your public profile, branding, and account security.
+      </p>
+
+      <SettingsPageClient initial={config} storageCard={<StorageCard />} />
     </div>
   );
 }

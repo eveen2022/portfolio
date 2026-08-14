@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, User, FolderKanban, Briefcase, Newspaper, Mail } from "lucide-react";
+import { Home, User, FolderKanban, Briefcase, GraduationCap, Newspaper, Mail } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 type NavItem = { label: string; href: string };
@@ -12,6 +12,7 @@ const iconMap: Record<string, typeof User> = {
   About: User,
   Projects: FolderKanban,
   Experience: Briefcase,
+  Education: GraduationCap,
   Blog: Newspaper,
   Contact: Mail,
 };

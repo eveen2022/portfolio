@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/components/admin/toast/ToastProvider";
+import { useConfirm } from "@/components/admin/confirm/ConfirmProvider";
 
 export function DeleteButton({
   endpoint,
@@ -16,10 +17,11 @@ export function DeleteButton({
 }) {
   const router = useRouter();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [deleting, setDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!window.confirm(confirmMessage)) return;
+    if (!(await confirm(confirmMessage))) return;
     setDeleting(true);
     try {
       const response = await fetch(endpoint, { method: "DELETE" });

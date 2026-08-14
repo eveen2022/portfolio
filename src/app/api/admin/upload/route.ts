@@ -11,6 +11,7 @@ const CATEGORY_DIRS: Record<string, string> = {
   projects: "images/projects",
   blog: "images/blog",
   experience: "images/experience",
+  site: "images/site",
 };
 
 const IMAGE_EXTENSIONS: Record<string, string> = {

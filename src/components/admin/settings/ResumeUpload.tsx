@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FileText, Upload, Loader2, ExternalLink, Trash2 } from "lucide-react";
 import { Card } from "@/components/admin/form";
 import { useToast } from "@/components/admin/toast/ToastProvider";
+import { useConfirm } from "@/components/admin/confirm/ConfirmProvider";
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -14,6 +15,7 @@ function formatDate(iso: string) {
 
 export function ResumeUpload() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [exists, setExists] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -66,7 +68,7 @@ export function ResumeUpload() {
   }
 
   async function handleDelete() {
-    if (!window.confirm("Delete the current resume? This can't be undone.")) return;
+    if (!(await confirm("Delete the current resume? This can't be undone."))) return;
 
     setDeleting(true);
     try {

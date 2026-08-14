@@ -33,6 +33,9 @@ const emptyProject: Project = {
   status: "completed",
   uploadedAt: "",
   isNew: true,
+  seoTitle: "",
+  seoDescription: "",
+  noIndex: false,
 };
 
 export function ProjectForm({ mode, initial, onSaved, onCancel }: Props) {
@@ -255,23 +258,12 @@ export function ProjectForm({ mode, initial, onSaved, onCancel }: Props) {
           </FormRow>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormRow>
-            <Label htmlFor="order">Sort order</Label>
-            <Input
-              id="order"
-              type="number"
-              value={project.order}
-              onChange={(e) => update("order", Number(e.target.value) || 0)}
-            />
-          </FormRow>
-          <div className="flex items-end pb-2">
-            <Checkbox
-              label="Featured on homepage"
-              checked={project.featured}
-              onChange={(e) => update("featured", e.target.checked)}
-            />
-          </div>
+        <div className="rounded-xl border border-border p-4">
+          <Checkbox
+            label="Featured on homepage"
+            checked={project.featured}
+            onChange={(e) => update("featured", e.target.checked)}
+          />
         </div>
 
         <div className="rounded-xl border border-border p-4">
@@ -285,6 +277,34 @@ export function ProjectForm({ mode, initial, onSaved, onCancel }: Props) {
             project and it&apos;s been up for less than a month — turn this
             off anytime to hide it early.
           </p>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
+          <p className="text-sm font-medium text-foreground-secondary">SEO (optional)</p>
+          <FormRow>
+            <Label htmlFor="seoTitle">Search title override</Label>
+            <Input
+              id="seoTitle"
+              placeholder={project.title || "Falls back to the title above"}
+              value={project.seoTitle ?? ""}
+              onChange={(e) => update("seoTitle", e.target.value)}
+            />
+          </FormRow>
+          <FormRow>
+            <Label htmlFor="seoDescription">Search description override</Label>
+            <Textarea
+              id="seoDescription"
+              rows={2}
+              placeholder={project.description || "Falls back to the description above"}
+              value={project.seoDescription ?? ""}
+              onChange={(e) => update("seoDescription", e.target.value)}
+            />
+          </FormRow>
+          <Checkbox
+            label="Hide from search engines"
+            checked={project.noIndex}
+            onChange={(e) => update("noIndex", e.target.checked)}
+          />
         </div>
       </div>
 

@@ -66,12 +66,16 @@ export function FormRow({
 export function Card({
   children,
   className,
-}: {
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn("glass glass-sheen relative rounded-2xl p-4 sm:p-6", className)}>
+    <div
+      className={cn("glass glass-sheen relative rounded-2xl p-4 sm:p-6", className)}
+      {...rest}
+    >
       {children}
     </div>
   );

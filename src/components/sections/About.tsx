@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { User, Briefcase, MapPin, Mail } from "lucide-react";
 import { getSiteConfig } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { FadeIn } from "@/components/motion/FadeIn";
+import { SectionGlow } from "@/components/decor/SectionGlow";
 
 export async function About() {
   const siteConfig = await getSiteConfig();
@@ -14,7 +16,8 @@ export async function About() {
   ];
 
   return (
-    <section className="py-20">
+    <section className="relative overflow-hidden py-20">
+      <SectionGlow variant="top-right" color={2} />
       <Container>
         <FadeIn>
           <SectionHeading
@@ -25,7 +28,24 @@ export async function About() {
             icon={User}
           />
         </FadeIn>
-        <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
+        <div className="grid gap-8 lg:grid-cols-[12rem_1.4fr_1fr] lg:items-start">
+          <FadeIn className="flex justify-center lg:justify-start">
+            <div className="glass glass-sheen relative aspect-square w-48 shrink-0 overflow-hidden rounded-3xl lg:w-full">
+              {siteConfig.photo ? (
+                <Image
+                  src={siteConfig.photo}
+                  alt={siteConfig.name}
+                  fill
+                  sizes="192px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-muted">
+                  <User className="size-12" />
+                </div>
+              )}
+            </div>
+          </FadeIn>
           <FadeIn delay={0.1}>
             <p className="text-lg leading-relaxed text-foreground-secondary">
               {siteConfig.bio}

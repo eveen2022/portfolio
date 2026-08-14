@@ -13,10 +13,56 @@ export const contactFormSchema = z.object({
 
 export type ContactFormInput = z.infer<typeof contactFormSchema>;
 
+export const trackVisitSchema = z.object({
+  referrer: z.string().trim().max(500).optional().default(""),
+});
+
+export const trackPageviewSchema = z.object({
+  path: z.string().trim().min(1).max(300),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(8, "New password must be at least 8 characters").max(200),
 });
+
+export const loginSchema = z.object({
+  password: z.string().min(1, "Password is required").max(200),
+});
+
+export const totpCodeSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Code must be exactly 6 digits"),
+});
+
+export const recoverySetupSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  phone: z.string().trim().min(7, "Enter a valid phone number").max(30),
+  pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+});
+
+export const recoveryVerifySchema = z.object({
+  phone: z.string().trim().min(1, "Phone number is required").max(30),
+  pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+});
+
+export const recoveryResetSchema = z.object({
+  newPassword: z.string().min(8, "New password must be at least 8 characters").max(200),
+});
+
+// For fields rendered as a clickable <a href> (repo/live links, social
+// profiles) — blocks a "javascript:" or other non-http(s) scheme from ever
+// being stored, since that would make it a clickable XSS vector wherever the
+// link renders. Empty string stays allowed (these are all optional).
+const externalUrlField = (maxLength: number) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength)
+    .refine((value) => value === "" || /^https?:\/\//i.test(value), {
+      message: "Must be a valid http:// or https:// URL",
+    })
+    .optional()
+    .default("");
 
 const slugSchema = z
   .string()
@@ -38,8 +84,8 @@ export const projectSchema = z.object({
       }),
     )
     .default([]),
-  repoUrl: z.string().trim().max(500).optional().default(""),
-  liveUrl: z.string().trim().max(500).optional().default(""),
+  repoUrl: externalUrlField(500),
+  liveUrl: externalUrlField(500),
   featured: z.boolean().default(false),
   order: z.number().int().default(0),
   startDate: z.string().trim().max(20).default(""),
@@ -49,6 +95,9 @@ export const projectSchema = z.object({
   // from the client — the default here only matters as a safe fallback.
   uploadedAt: z.string().trim().max(40).optional().default(""),
   isNew: z.boolean().default(false),
+  seoTitle: z.string().trim().max(150).optional().default(""),
+  seoDescription: z.string().trim().max(300).optional().default(""),
+  noIndex: z.boolean().optional().default(false),
 });
 
 export type ProjectInput = z.infer<typeof projectSchema>;
@@ -64,6 +113,10 @@ export const postSchema = z.object({
   published: z.boolean().default(false),
   readingTimeMinutes: z.number().int().min(1).max(999).default(5),
   body: z.string().max(200_000).default(""),
+  order: z.number().int().default(0),
+  seoTitle: z.string().trim().max(150).optional().default(""),
+  seoDescription: z.string().trim().max(300).optional().default(""),
+  noIndex: z.boolean().optional().default(false),
 });
 
 export type PostInput = z.infer<typeof postSchema>;
@@ -116,9 +169,18 @@ export const timelineEntrySchema = z.object({
       }),
     )
     .default([]),
+  order: z.number().int().default(0),
 });
 
 export const timelineEntriesSchema = z.array(timelineEntrySchema);
+
+export const reorderSchema = z.object({
+  slugs: z.array(z.string().trim().min(1)).min(1),
+});
+
+export const privacyContentSchema = z.object({
+  content: z.string().max(20_000).default(""),
+});
 
 export const siteConfigSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -130,9 +192,31 @@ export const siteConfigSchema = z.object({
   phone: z.string().trim().max(30).optional().default(""),
   location: z.string().trim().max(150).optional().default(""),
   workArrangement: z.array(z.enum(WORK_ARRANGEMENTS)).min(1, "Select at least one"),
+  photo: z.string().trim().max(500).optional().default(""),
+  maintenanceMode: z.boolean().optional().default(false),
+  maintenanceMessage: z.string().trim().max(500).optional().default(""),
+  notFoundMode: z.boolean().optional().default(false),
+  shareEnabled: z.boolean().optional().default(true),
   social: z.object({
-    github: z.string().trim().max(300).optional().default(""),
-    linkedin: z.string().trim().max(300).optional().default(""),
-    twitter: z.string().trim().max(300).optional().default(""),
+    github: externalUrlField(300),
+    linkedin: externalUrlField(300),
+    twitter: externalUrlField(300),
+    whatsapp: externalUrlField(300),
+  }),
+  sections: z.object({
+    about: z.boolean().optional().default(true),
+    skills: z.boolean().optional().default(true),
+    projects: z.boolean().optional().default(true),
+    blog: z.boolean().optional().default(true),
+    experience: z.boolean().optional().default(true),
+    education: z.boolean().optional().default(true),
+    contact: z.boolean().optional().default(true),
+  }),
+  seo: z.object({
+    ogImage: z.string().trim().max(500).optional().default(""),
+    twitterHandle: z.string().trim().max(50).optional().default(""),
+    noIndex: z.boolean().optional().default(false),
+    googleSiteVerification: z.string().trim().max(200).optional().default(""),
+    bingSiteVerification: z.string().trim().max(200).optional().default(""),
   }),
 });

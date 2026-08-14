@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getExperience } from "@/lib/data";
 import { writeDataFile } from "@/lib/fsWrite";
 import { timelineEntriesSchema } from "@/lib/validation";
 import { logActivity } from "@/lib/activity";
+import { cleanupRemovedTimelineImages } from "@/lib/imageCleanup";
 
 export async function PUT(request: NextRequest) {
   let body: unknown;
@@ -19,7 +21,13 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  await writeDataFile("experience.json", parsed.data);
+  // TimelineEditor has no per-entry DELETE route — every add/edit/delete/
+  // reorder goes through this same PUT with the whole array, so a removed
+  // entry's logo/coverImage is only detectable by diffing against what was
+  // there before the write.
+  const oldEntries = await getExperience();
+  await writeDataFile("experience.json", parsed.data, "id");
+  await cleanupRemovedTimelineImages("experience", oldEntries, parsed.data);
   await logActivity("update", "experience", "Updated experience");
   return NextResponse.json({ success: true });
 }

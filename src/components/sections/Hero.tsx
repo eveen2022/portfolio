@@ -4,12 +4,15 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { FadeIn } from "@/components/motion/FadeIn";
 import { ScrollDownIndicator } from "@/components/sections/ScrollDownIndicator";
+import { SectionGlow } from "@/components/decor/SectionGlow";
 
 export async function Hero() {
   const siteConfig = await getSiteConfig();
 
   return (
     <section className="relative flex min-h-[calc(100svh-8rem)] items-center overflow-hidden">
+      <SectionGlow variant="top-left" color={1} />
+      <SectionGlow variant="bottom-right" color={2} />
       <Container className="flex flex-col items-center gap-7 py-16 text-center">
         <FadeIn>
           <div className="glass relative inline-flex items-center gap-2.5 rounded-full px-4 py-1.5">
@@ -34,16 +37,25 @@ export async function Hero() {
             {siteConfig.tagline}
           </p>
         </FadeIn>
-        <FadeIn delay={0.24} className="flex flex-wrap justify-center gap-3 pt-2">
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button href="/projects">
-              View Projects <ArrowRight className="size-4" />
-            </Button>
-            <Button href="/contact" variant="secondary">
-              <Mail className="size-4" /> Get in touch
-            </Button>
-          </div>
-        </FadeIn>
+        {(siteConfig.sections.projects || siteConfig.sections.contact) && (
+          <FadeIn
+            delay={0.24}
+            className="flex flex-wrap justify-center gap-3 pt-2"
+          >
+            <div className="flex flex-wrap justify-center gap-3">
+              {siteConfig.sections.projects && (
+                <Button href="/projects">
+                  View Projects <ArrowRight className="size-4" />
+                </Button>
+              )}
+              {siteConfig.sections.contact && (
+                <Button href="/contact" variant="secondary">
+                  <Mail className="size-4" /> Get in touch
+                </Button>
+              )}
+            </div>
+          </FadeIn>
+        )}
       </Container>
       <ScrollDownIndicator />
     </section>

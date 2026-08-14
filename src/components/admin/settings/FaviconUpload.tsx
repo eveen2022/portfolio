@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ImageIcon, Upload, Loader2, Trash2 } from "lucide-react";
 import { Card } from "@/components/admin/form";
 import { useToast } from "@/components/admin/toast/ToastProvider";
+import { useConfirm } from "@/components/admin/confirm/ConfirmProvider";
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -15,6 +16,7 @@ function formatDate(iso: string) {
 
 export function FaviconUpload() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [url, setUrl] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -69,7 +71,7 @@ export function FaviconUpload() {
   }
 
   async function handleDelete() {
-    if (!window.confirm("Remove the custom browser tab icon? This can't be undone.")) {
+    if (!(await confirm("Remove the custom browser tab icon? This can't be undone."))) {
       return;
     }
 

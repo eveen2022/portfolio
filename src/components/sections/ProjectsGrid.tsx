@@ -1,20 +1,25 @@
 import Link from "next/link";
 import { ArrowRight, FolderKanban } from "lucide-react";
-import { getProjects } from "@/lib/data";
+import { getProjects, getSiteConfig } from "@/lib/data";
 import { shouldShowNewBadge } from "@/lib/newBadge";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { FadeIn, StaggerGroup, StaggerItem } from "@/components/motion/FadeIn";
+import { SectionGlow } from "@/components/decor/SectionGlow";
 
 export async function ProjectsGrid() {
+  const siteConfig = await getSiteConfig();
+  if (!siteConfig.sections.projects) return null;
+
   const allProjects = await getProjects();
   const projects = allProjects.filter((project) => project.featured);
 
   if (projects.length === 0) return null;
 
   return (
-    <section className="py-20">
+    <section className="relative overflow-hidden py-20">
+      <SectionGlow variant="top-right" color={1} />
       <Container>
         <FadeIn className="mb-10 flex items-end justify-between">
           <div className="flex items-end justify-between w-full">

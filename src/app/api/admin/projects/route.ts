@@ -29,7 +29,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const data: Project = { ...parsed.data, uploadedAt: new Date().toISOString() };
+  // Order is drag-and-drop only (no form field for it) — new projects always
+  // land at the end of the current order. Date.now() rather than a count
+  // read separately from the write: two near-simultaneous creates reading
+  // the same array length would both land on the same order value, and any
+  // manual reorder afterwards re-stamps everything to a clean sequence
+  // anyway, so a large/sparse starting value is harmless.
+  const data: Project = {
+    ...parsed.data,
+    order: Date.now(),
+    uploadedAt: new Date().toISOString(),
+  };
 
   await upsertJsonEntry<Project>("projects.json", data, "slug");
   await logActivity("create", "project", `Created project "${parsed.data.title}"`);

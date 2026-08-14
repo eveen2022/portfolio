@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getProjectBySlug } from "@/lib/data";
+import { getProjectBySlug, getProjects } from "@/lib/data";
 import { deleteJsonEntry, replaceJsonEntry } from "@/lib/fsWrite";
 import { projectSchema } from "@/lib/validation";
 import { logActivity } from "@/lib/activity";
+import { cleanupProjectImage } from "@/lib/imageCleanup";
 import type { Project } from "@/lib/types";
 
 export async function PUT(
@@ -26,11 +27,26 @@ export async function PUT(
     );
   }
 
-  // Editing a project must not reset its "New" badge clock — keep whatever
-  // uploadedAt it already had rather than trusting the client's copy.
+  // A rename must not collide with a different project that already owns
+  // the target slug — replaceJsonEntry matches by the OLD slug, so without
+  // this check it would happily create two projects with the same slug.
+  if (parsed.data.slug !== slug) {
+    const collision = await getProjectBySlug(parsed.data.slug);
+    if (collision) {
+      return NextResponse.json(
+        { error: `A project with slug "${parsed.data.slug}" already exists.` },
+        { status: 409 },
+      );
+    }
+  }
+
+  // Editing a project must not reset its "New" badge clock or its
+  // drag-and-drop position — keep whatever it already had rather than
+  // trusting the client's copy (the edit form doesn't expose either field).
   const existing = await getProjectBySlug(slug);
   const data: Project = {
     ...parsed.data,
+    order: existing?.order ?? parsed.data.order,
     uploadedAt: existing?.uploadedAt || new Date().toISOString(),
   };
 
@@ -54,6 +70,10 @@ export async function DELETE(
 
   if (!deleted) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  if (project) {
+    await cleanupProjectImage(project, await getProjects());
   }
 
   await logActivity(

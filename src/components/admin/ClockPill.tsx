@@ -31,7 +31,7 @@ export function ClockPill() {
   if (!mounted) {
     return (
       <span
-        className="glass relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted"
+        className="glass relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted shadow-xl shadow-black/10"
         aria-hidden="true"
       >
         <Clock className="size-3" />
@@ -53,7 +53,7 @@ export function ClockPill() {
   }).format(now);
 
   return (
-    <span className="glass relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted">
+    <span className="glass relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-muted shadow-xl shadow-black/10">
       <Clock className="size-3" />
       <span className="font-mono tabular-nums">{time}</span>
       <span className="opacity-50">·</span>

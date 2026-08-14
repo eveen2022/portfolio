@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { ArrowRight, Newspaper } from "lucide-react";
-import { getPosts } from "@/lib/data";
+import { getPosts, getSiteConfig } from "@/lib/data";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PostCard } from "@/components/blog/PostCard";
 import { FadeIn, StaggerGroup, StaggerItem } from "@/components/motion/FadeIn";
+import { SectionGlow } from "@/components/decor/SectionGlow";
 
 export async function BlogPreview() {
+  const siteConfig = await getSiteConfig();
+  if (!siteConfig.sections.blog) return null;
+
   const posts = (await getPosts()).slice(0, 3);
 
   if (posts.length === 0) return null;
 
   return (
-    <section className="bg-secondary/50 py-20 pb-28">
+    <section className="relative overflow-hidden bg-secondary/50 py-20 pb-28">
+      <SectionGlow variant="top-left" color={3} />
       <Container>
         <FadeIn className="mb-10">
           <div className="flex items-end justify-between">

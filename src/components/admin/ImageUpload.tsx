@@ -16,7 +16,7 @@ export function ImageUpload({
   aspect = 16 / 9,
 }: {
   label: string;
-  category: "projects" | "blog" | "experience";
+  category: "projects" | "blog" | "experience" | "site";
   nameHint: string;
   value: string;
   onChange: (path: string) => void;

@@ -1,5 +1,5 @@
-import { readFile } from "fs/promises";
-import path from "path";
+import { getCollection, SINGLETON_ID } from "@/lib/mongodb";
+import { decodeMongoKey } from "@/lib/fsWrite";
 import type {
   Project,
   Post,
@@ -13,9 +13,6 @@ import type {
   Analytics,
 } from "@/lib/types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CONTENT_DIR = path.join(process.cwd(), "content");
-
 const DEFAULT_SITE_CONFIG: SiteConfig = {
   name: "Your Name",
   role: "Software Engineer",
@@ -26,16 +23,42 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
   phone: "",
   location: "",
   workArrangement: ["Remote"],
-  social: { github: "", linkedin: "", twitter: "" },
+  photo: "",
+  maintenanceMode: false,
+  maintenanceMessage: "",
+  notFoundMode: false,
+  shareEnabled: true,
+  social: { github: "", linkedin: "", twitter: "", whatsapp: "" },
+  sections: {
+    about: true,
+    skills: true,
+    projects: true,
+    blog: true,
+    experience: true,
+    education: true,
+    contact: true,
+  },
+  seo: {
+    ogImage: "",
+    twitterHandle: "",
+    noIndex: false,
+    googleSiteVerification: "",
+    bingSiteVerification: "",
+  },
 };
 
-async function readJson<T>(fileName: string, fallback: T): Promise<T> {
-  try {
-    const raw = await readFile(path.join(DATA_DIR, fileName), "utf-8");
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
+async function findAll<T extends object>(collectionName: string): Promise<T[]> {
+  const collection = await getCollection(collectionName);
+  const docs = await collection.find({}, { projection: { _id: 0 } }).toArray();
+  return docs as unknown as T[];
+}
+
+async function findSingleton<T extends object>(collectionName: string): Promise<T | null> {
+  const collection = await getCollection(collectionName);
+  const doc = await collection.findOne({ _id: SINGLETON_ID } as never, {
+    projection: { _id: 0 },
+  });
+  return doc as T | null;
 }
 
 // Normalizes projects written before icons / the "New" badge were supported:
@@ -51,12 +74,13 @@ function normalizeProject(project: Project): Project {
     techStack,
     uploadedAt: project.uploadedAt || project.startDate || "",
     isNew: project.isNew ?? false,
+    noIndex: project.noIndex ?? false,
   };
 }
 
 export async function getProjects(): Promise<Project[]> {
-  const projects = await readJson<Project[]>("projects.json", []);
-  return [...projects].map(normalizeProject).sort((a, b) => a.order - b.order);
+  const projects = await findAll<Project>("projects");
+  return projects.map(normalizeProject).sort((a, b) => a.order - b.order);
 }
 
 export async function getFeaturedProjects(): Promise<Project[]> {
@@ -72,11 +96,21 @@ export async function getProjectBySlug(
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-  const posts = await readJson<Post[]>("posts.json", []);
-  return [...posts].sort(
+  const posts = await findAll<Post>("posts");
+  // Posts predating manual drag-and-drop ordering don't have `order` set yet
+  // — backfill it from the previous default (newest first) so nothing
+  // visually reshuffles until the admin actually drags something.
+  const dateDesc = [...posts].sort(
     (a, b) =>
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
   );
+  let fallbackIndex = 0;
+  const withOrder = dateDesc.map((post) => ({
+    ...post,
+    order: typeof post.order === "number" ? post.order : fallbackIndex++,
+    noIndex: post.noIndex ?? false,
+  }));
+  return withOrder.sort((a, b) => a.order - b.order);
 }
 
 export async function getPosts(): Promise<Post[]> {
@@ -90,18 +124,58 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
 }
 
 export async function getPostBody(slug: string): Promise<string> {
-  try {
-    return await readFile(
-      path.join(CONTENT_DIR, "blog", `${slug}.md`),
-      "utf-8",
-    );
-  } catch {
-    return "";
-  }
+  const collection = await getCollection<{ _id: string; content: string }>("content");
+  const doc = await collection.findOne({ _id: `blog/${slug}.md` });
+  return doc?.content ?? "";
+}
+
+const PRIVACY_CONTENT_ID = "privacy-policy.md";
+
+// Used until the admin saves their own text from /admin/privacy — keeps the
+// page honest out of the box instead of blank, and stays in sync with the
+// site's actual name/email since it's computed fresh rather than stored.
+const DEFAULT_PRIVACY_CONTENT = `## Contact form
+
+If you send a message through the [contact form](/contact), the name, email address, subject, and message you enter are stored so {{siteName}} can read and reply to it. The IP address the message was sent from is also logged, purely to help catch spam. Messages aren't shared with anyone else or used for marketing, and they stay stored until {{siteName}} deletes them.
+
+## Analytics
+
+Page visits are counted to understand how the site is used — total visits, visits per day, which pages get viewed, which sites sent you here (just the domain, e.g. "google.com", not the full URL), and a rough device/browser breakdown. These are aggregate counts, not a profile tied to you individually: nothing here is linked to your name, email, or IP address, there's no cross-site tracking, and no data is sold or shared with advertisers. Daily visit counts older than 30 days are automatically deleted.
+
+## Cookies & local storage
+
+- A small cookie remembers that your browser has already been counted as a visit today, so refreshing the page or browsing around doesn't inflate the numbers above. It just holds a date, nothing that identifies you.
+- Your light/dark theme preference is saved in your browser's local storage, not a cookie — it never leaves your device.
+- A sign-in cookie is used only when {{siteName}} is logged into the admin dashboard — it plays no role for anyone just browsing the site.
+
+## Third parties
+
+This site doesn't use third-party analytics, ad networks, or embedded trackers. Everything described above runs on this site's own server.
+
+## Questions
+
+For anything about this page or your data, reach out at [{{siteEmail}}](mailto:{{siteEmail}}).
+`;
+
+function renderPrivacyTemplate(template: string, siteName: string, siteEmail: string): string {
+  return template.replaceAll("{{siteName}}", siteName).replaceAll("{{siteEmail}}", siteEmail);
+}
+
+/** The computed fallback text — used by the admin editor's "Reset to default" action. */
+export async function getDefaultPrivacyPolicyContent(): Promise<string> {
+  const siteConfig = await getSiteConfig();
+  return renderPrivacyTemplate(DEFAULT_PRIVACY_CONTENT, siteConfig.name, siteConfig.email);
+}
+
+export async function getPrivacyPolicyContent(): Promise<string> {
+  const collection = await getCollection<{ _id: string; content: string }>("content");
+  const doc = await collection.findOne({ _id: PRIVACY_CONTENT_ID });
+  if (doc?.content) return doc.content;
+  return getDefaultPrivacyPolicyContent();
 }
 
 export async function getSkills(): Promise<SkillGroup[]> {
-  return readJson<SkillGroup[]>("skills.json", []);
+  return findAll<SkillGroup>("skills");
 }
 
 // Migrates grades written before they were grouped by year: what used to be
@@ -122,14 +196,29 @@ function normalizeTimelineEntry(entry: TimelineEntry): TimelineEntry {
   return { ...entry, gradesByYear };
 }
 
+// Entries predating manual drag-and-drop ordering don't have `order` set yet
+// — backfill it from the previous default (most recent start date first) so
+// nothing visually reshuffles until the admin actually drags something.
+function withFallbackOrder(entries: TimelineEntry[]): TimelineEntry[] {
+  const dateDesc = [...entries].sort(
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+  );
+  let fallbackIndex = 0;
+  const withOrder = dateDesc.map((entry) => ({
+    ...entry,
+    order: typeof entry.order === "number" ? entry.order : fallbackIndex++,
+  }));
+  return withOrder.sort((a, b) => a.order - b.order);
+}
+
 export async function getExperience(): Promise<TimelineEntry[]> {
-  const entries = await readJson<TimelineEntry[]>("experience.json", []);
-  return entries.map(normalizeTimelineEntry);
+  const entries = await findAll<TimelineEntry>("experience");
+  return withFallbackOrder(entries.map(normalizeTimelineEntry));
 }
 
 export async function getEducation(): Promise<TimelineEntry[]> {
-  const entries = await readJson<TimelineEntry[]>("education.json", []);
-  return entries.map(normalizeTimelineEntry);
+  const entries = await findAll<TimelineEntry>("education");
+  return withFallbackOrder(entries.map(normalizeTimelineEntry));
 }
 
 export async function getTimeline(): Promise<TimelineEntry[]> {
@@ -150,29 +239,59 @@ export async function getTimelineEntryById(
 }
 
 export async function getMessages(): Promise<ContactMessage[]> {
-  const messages = await readJson<ContactMessage[]>("messages.json", []);
+  const messages = await findAll<ContactMessage>("messages");
   return [...messages].sort(
     (a, b) =>
       new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
   );
 }
 
+const DEFAULT_ANALYTICS: Analytics = {
+  totalVisits: 0,
+  dailyVisits: {},
+  totalPageViews: 0,
+  pageViews: {},
+  referrers: {},
+  devices: { desktop: 0, mobile: 0, tablet: 0 },
+  browsers: {},
+};
+
+// Referrer hostnames and page paths are stored with dots percent-escaped
+// (see encodeMongoKey) so they're safe as dynamic Mongo update-path segments
+// — decode them back to their real form for anything that reads this data.
+function decodeKeys(record: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [decodeMongoKey(key), value]),
+  );
+}
+
 export async function getAnalytics(): Promise<Analytics> {
-  return readJson<Analytics>("analytics.json", { totalVisits: 0, dailyVisits: {} });
+  const analytics = await findSingleton<Partial<Analytics>>("analytics");
+  return {
+    ...DEFAULT_ANALYTICS,
+    ...analytics,
+    dailyVisits: { ...DEFAULT_ANALYTICS.dailyVisits, ...analytics?.dailyVisits },
+    pageViews: decodeKeys({ ...DEFAULT_ANALYTICS.pageViews, ...analytics?.pageViews }),
+    referrers: decodeKeys({ ...DEFAULT_ANALYTICS.referrers, ...analytics?.referrers }),
+    devices: { ...DEFAULT_ANALYTICS.devices, ...analytics?.devices },
+    browsers: decodeKeys({ ...DEFAULT_ANALYTICS.browsers, ...analytics?.browsers }),
+  };
 }
 
 export async function getActivity(): Promise<ActivityEntry[]> {
-  const entries = await readJson<ActivityEntry[]>("activity.json", []);
+  const entries = await findAll<ActivityEntry>("activity");
   return [...entries].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
 }
 
 export async function getSiteConfig(): Promise<SiteConfig> {
-  const config = await readJson<Partial<SiteConfig>>("site.json", {});
+  const config = await findSingleton<Partial<SiteConfig>>("site");
   return {
     ...DEFAULT_SITE_CONFIG,
     ...config,
-    social: { ...DEFAULT_SITE_CONFIG.social, ...config.social },
+    social: { ...DEFAULT_SITE_CONFIG.social, ...config?.social },
+    sections: { ...DEFAULT_SITE_CONFIG.sections, ...config?.sections },
+    seo: { ...DEFAULT_SITE_CONFIG.seo, ...config?.seo },
   };
 }

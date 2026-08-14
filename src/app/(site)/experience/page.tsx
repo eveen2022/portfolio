@@ -1,13 +1,22 @@
 import type { Metadata } from "next";
 import { Timeline } from "@/components/sections/Timeline";
+import { getSiteConfig } from "@/lib/data";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Experience",
-  description: "Where I've worked and studied.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteConfig = await getSiteConfig();
+  return buildPageMetadata({
+    title: "Experience",
+    description: "Where I've worked.",
+    path: "/experience",
+    image: siteConfig.seo.ogImage || siteConfig.photo || undefined,
+    noIndex: siteConfig.seo.noIndex,
+    siteName: siteConfig.name,
+  });
+}
 
 export default function ExperiencePage() {
-  return <Timeline />;
+  return <Timeline type="work" />;
 }

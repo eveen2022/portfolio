@@ -62,7 +62,10 @@ export function verifyFileSignature(buffer: Buffer, mimeType: string): boolean {
 // Strips that content before the file is written to disk.
 export function sanitizeSvg(buffer: Buffer): Buffer {
   let text = buffer.toString("utf-8");
-  text = text.replace(/<script[\s\S]*?<\/script\s*>/gi, "");
+  // Matches a closing </script> when present, or runs to the end of the
+  // document when it isn't — an unclosed <script> tag would otherwise pass
+  // through untouched, since the old pattern required a matching close.
+  text = text.replace(/<script[\s\S]*?(<\/script\s*>|$)/gi, "");
   text = text.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
   text = text.replace(
     /((?:xlink:)?href)\s*=\s*("|')\s*javascript:[^"']*\2/gi,

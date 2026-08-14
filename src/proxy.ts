@@ -1,8 +1,38 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
+import { getSiteConfig } from "@/lib/data";
+import type { SiteConfig } from "@/lib/types";
 
-const PUBLIC_ADMIN_PATHS = ["/admin/login"];
-const PUBLIC_API_PATHS = ["/api/admin/login"];
+// Route prefixes gated by a single sections.* flag.
+const SECTION_ROUTE_PREFIXES: {
+  prefix: string;
+  section: keyof Omit<SiteConfig["sections"], "skills">;
+}[] = [
+  { prefix: "/about", section: "about" },
+  { prefix: "/projects", section: "projects" },
+  { prefix: "/experience", section: "experience" },
+  { prefix: "/education", section: "education" },
+  { prefix: "/blog", section: "blog" },
+  { prefix: "/contact", section: "contact" },
+];
+
+const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password"];
+const PUBLIC_API_PATHS = [
+  "/api/admin/login",
+  "/api/admin/recovery/verify",
+  "/api/admin/recovery/reset",
+];
+
+// Paths that must keep working during maintenance/404 mode regardless of
+// admin status: the rewrite targets themselves (avoids a rewrite loop), and
+// crawler metadata files (search engines shouldn't index a placeholder as
+// if it were these).
+const SITE_STATUS_EXEMPT_PATHS = [
+  "/maintenance",
+  "/force-404",
+  "/sitemap.xml",
+  "/robots.txt",
+];
 
 function buildCsp(nonce: string): string {
   const isDev = process.env.NODE_ENV !== "production";
@@ -85,6 +115,35 @@ export async function proxy(request: NextRequest) {
       const origin = request.headers.get("origin");
       if (origin && origin !== request.nextUrl.origin) {
         return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+      }
+    }
+  } else if (
+    !pathname.startsWith("/api") &&
+    !SITE_STATUS_EXEMPT_PATHS.some((path) => pathname.startsWith(path))
+  ) {
+    // Public page request, not an admin route. An admin viewing the site
+    // with a valid session sees it exactly as visitors would otherwise —
+    // this is the "preview while it's down" bypass — everyone else gets
+    // rewritten to whichever site-status page is active (URL in the address
+    // bar is unchanged, only the rendered content differs). Maintenance
+    // takes priority if both are somehow on at once.
+    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    const isAdminSession = token ? await verifySessionToken(token) : false;
+
+    if (!isAdminSession) {
+      const siteConfig = await getSiteConfig();
+      if (siteConfig.maintenanceMode) {
+        return NextResponse.rewrite(new URL("/maintenance", request.url));
+      }
+      if (siteConfig.notFoundMode) {
+        return NextResponse.rewrite(new URL("/force-404", request.url));
+      }
+
+      const matchedSection = SECTION_ROUTE_PREFIXES.find(({ prefix }) =>
+        pathname.startsWith(prefix),
+      );
+      if (matchedSection && !siteConfig.sections[matchedSection.section]) {
+        return NextResponse.rewrite(new URL("/force-404", request.url));
       }
     }
   }

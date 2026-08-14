@@ -7,14 +7,31 @@ import { formatDateRange } from "@/lib/format";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { FadeIn } from "@/components/motion/FadeIn";
+import { SectionGlow } from "@/components/decor/SectionGlow";
 
-function sortByDateDesc(entries: TimelineEntry[]) {
-  return [...entries].sort(
-    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-  );
-}
+type TimelineType = "work" | "education";
 
-function TimelineList({ entries }: { entries: TimelineEntry[] }) {
+const COPY: Record<
+  TimelineType,
+  { basePath: string; eyebrow: string; title: string; description: string; empty: string }
+> = {
+  work: {
+    basePath: "/experience",
+    eyebrow: "Experience",
+    title: "Where I've worked",
+    description: "A timeline of roles.",
+    empty: "No work experience yet — add entries from /admin/experience.",
+  },
+  education: {
+    basePath: "/education",
+    eyebrow: "Education",
+    title: "Where I've studied",
+    description: "A timeline of education.",
+    empty: "No education yet — add entries from /admin/education.",
+  },
+};
+
+function TimelineList({ entries, basePath }: { entries: TimelineEntry[]; basePath: string }) {
   return (
     <ol className="space-y-6 border-l border-border pl-6">
       {entries.map((entry, index) => (
@@ -28,7 +45,7 @@ function TimelineList({ entries }: { entries: TimelineEntry[] }) {
           </span>
           <FadeIn delay={index * 0.06} y={12}>
             <Link
-              href={`/experience/${entry.id}`}
+              href={`${basePath}/${entry.id}`}
               className="glass glass-sheen glow-ring relative block rounded-2xl p-5 transition-transform duration-300 hover:-translate-y-1"
             >
               <div className="flex items-start gap-4">
@@ -44,7 +61,11 @@ function TimelineList({ entries }: { entries: TimelineEntry[] }) {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-muted">
-                    {formatDateRange(entry.startDate, entry.endDate, entry.current)}
+                    {formatDateRange(
+                      entry.startDate,
+                      entry.endDate,
+                      entry.current,
+                    )}
                   </p>
                   <h3 className="mt-1 text-lg font-semibold text-foreground">
                     {entry.role} · {entry.organization}
@@ -69,62 +90,29 @@ function TimelineList({ entries }: { entries: TimelineEntry[] }) {
   );
 }
 
-export async function Timeline() {
-  const [experience, education] = await Promise.all([
-    getExperience(),
-    getEducation(),
-  ]);
-  const work = sortByDateDesc(experience);
-  const study = sortByDateDesc(education);
+export async function Timeline({ type }: { type: TimelineType }) {
+  const copy = COPY[type];
+  const entries = type === "work" ? await getExperience() : await getEducation();
+  const Icon = type === "work" ? Briefcase : GraduationCap;
 
   return (
-    <section className="py-20">
+    <section className="relative overflow-hidden py-20">
+      <SectionGlow variant="top-left" color={3} />
       <Container>
         <FadeIn>
           <SectionHeading
             as="h1"
-            eyebrow="Experience"
-            title="Where I've worked and studied"
-            description="A timeline of roles and education, most recent first."
-            icon={Briefcase}
+            eyebrow={copy.eyebrow}
+            title={copy.title}
+            description={copy.description}
+            icon={Icon}
           />
         </FadeIn>
 
-        {work.length === 0 && study.length === 0 ? (
-          <p className="text-muted">
-            No experience yet — add entries from /admin/experience or
-            /admin/education.
-          </p>
+        {entries.length === 0 ? (
+          <p className="text-muted">{copy.empty}</p>
         ) : (
-          <div className="space-y-16">
-            <div>
-              <div className="mb-6 flex items-center gap-2">
-                <Briefcase className="size-5 text-accent" />
-                <h2 className="text-xl font-semibold text-foreground">
-                  Work experience
-                </h2>
-              </div>
-              {work.length === 0 ? (
-                <p className="text-muted">No work experience added yet.</p>
-              ) : (
-                <TimelineList entries={work} />
-              )}
-            </div>
-
-            <div>
-              <div className="mb-6 flex items-center gap-2">
-                <GraduationCap className="size-5 text-accent" />
-                <h2 className="text-xl font-semibold text-foreground">
-                  Education
-                </h2>
-              </div>
-              {study.length === 0 ? (
-                <p className="text-muted">No education added yet.</p>
-              ) : (
-                <TimelineList entries={study} />
-              )}
-            </div>
-          </div>
+          <TimelineList entries={entries} basePath={copy.basePath} />
         )}
       </Container>
     </section>

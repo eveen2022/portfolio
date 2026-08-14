@@ -28,6 +28,10 @@ const emptyPost: Post & { body: string } = {
   published: false,
   readingTimeMinutes: 5,
   body: "",
+  order: 0,
+  seoTitle: "",
+  seoDescription: "",
+  noIndex: false,
 };
 
 export function PostForm({ mode, initial, onSaved, onCancel }: Props) {
@@ -182,6 +186,34 @@ export function PostForm({ mode, initial, onSaved, onCancel }: Props) {
               onChange={(e) => update("published", e.target.checked)}
             />
           </div>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
+          <p className="text-sm font-medium text-foreground-secondary">SEO (optional)</p>
+          <FormRow>
+            <Label htmlFor="seoTitle">Search title override</Label>
+            <Input
+              id="seoTitle"
+              placeholder={post.title || "Falls back to the title above"}
+              value={post.seoTitle ?? ""}
+              onChange={(e) => update("seoTitle", e.target.value)}
+            />
+          </FormRow>
+          <FormRow>
+            <Label htmlFor="seoDescription">Search description override</Label>
+            <Textarea
+              id="seoDescription"
+              rows={2}
+              placeholder={post.excerpt || "Falls back to the excerpt above"}
+              value={post.seoDescription ?? ""}
+              onChange={(e) => update("seoDescription", e.target.value)}
+            />
+          </FormRow>
+          <Checkbox
+            label="Hide from search engines"
+            checked={post.noIndex}
+            onChange={(e) => update("noIndex", e.target.checked)}
+          />
         </div>
 
         <FormRow>

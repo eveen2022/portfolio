@@ -37,8 +37,22 @@ export function isRateLimited(
   return entry.count > maxAttempts;
 }
 
+// X-Forwarded-For is only trustworthy when something in front of Node
+// actually sets it authoritatively (Vercel's edge network, or a correctly
+// configured reverse proxy). Without that, it's just a request header a
+// client can set to whatever they want — trusting it blindly would let
+// every rate limit in the app (login, TOTP, recovery PIN, upload) be
+// bypassed by sending a different spoofed IP on every request. Set
+// TRUST_PROXY_HEADERS=true only when the deployment genuinely sits behind
+// such a proxy; otherwise every caller collapses into one shared bucket per
+// limiter, which is a global rather than per-IP limit but can't be spoofed
+// away, so brute-forcing still gets locked out.
+const TRUST_PROXY_HEADERS = process.env.TRUST_PROXY_HEADERS === "true";
+
 export function getClientIp(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return "unknown";
+  if (TRUST_PROXY_HEADERS) {
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  }
+  return "shared";
 }
