@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { getPosts, getProjects, getTimeline, getSiteConfig } from "@/lib/data";
 import { siteMeta } from "@/lib/site";
 
+// Reads from the DB — must run per-request, not at build time (see other
+// routes' `dynamic = "force-dynamic"` for the same reason).
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [projects, posts, timeline, siteConfig] = await Promise.all([
     getProjects(),
