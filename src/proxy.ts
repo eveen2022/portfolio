@@ -1,7 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
-import { getSiteConfig } from "@/lib/data";
 import type { SiteConfig } from "@/lib/types";
+
+// Fetched from a Route Handler rather than calling getSiteConfig() directly:
+// that pulls in mongodb, which can't be bundled into whatever environment
+// proxy.ts runs in on some deployment platforms.
+type SiteStatus = Pick<SiteConfig, "maintenanceMode" | "notFoundMode" | "sections">;
+
+async function fetchSiteStatus(request: NextRequest): Promise<SiteStatus> {
+  const res = await fetch(new URL("/api/internal/site-status", request.url));
+  return res.json();
+}
 
 // Route prefixes gated by a single sections.* flag.
 const SECTION_ROUTE_PREFIXES: {
@@ -131,18 +140,18 @@ export async function proxy(request: NextRequest) {
     const isAdminSession = token ? await verifySessionToken(token) : false;
 
     if (!isAdminSession) {
-      const siteConfig = await getSiteConfig();
-      if (siteConfig.maintenanceMode) {
+      const siteStatus = await fetchSiteStatus(request);
+      if (siteStatus.maintenanceMode) {
         return NextResponse.rewrite(new URL("/maintenance", request.url));
       }
-      if (siteConfig.notFoundMode) {
+      if (siteStatus.notFoundMode) {
         return NextResponse.rewrite(new URL("/force-404", request.url));
       }
 
       const matchedSection = SECTION_ROUTE_PREFIXES.find(({ prefix }) =>
         pathname.startsWith(prefix),
       );
-      if (matchedSection && !siteConfig.sections[matchedSection.section]) {
+      if (matchedSection && !siteStatus.sections[matchedSection.section]) {
         return NextResponse.rewrite(new URL("/force-404", request.url));
       }
     }
