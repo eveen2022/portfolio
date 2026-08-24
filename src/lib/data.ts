@@ -285,8 +285,16 @@ export async function getActivity(): Promise<ActivityEntry[]> {
   );
 }
 
+// Called from the root layout and (site) layout on every single request, so
+// a DB/env misconfiguration here must not take the whole site down — fall
+// back to defaults and let the page render instead of throwing.
 export async function getSiteConfig(): Promise<SiteConfig> {
-  const config = await findSingleton<Partial<SiteConfig>>("site");
+  let config: Partial<SiteConfig> | null = null;
+  try {
+    config = await findSingleton<Partial<SiteConfig>>("site");
+  } catch (error) {
+    console.error("getSiteConfig: falling back to defaults —", error);
+  }
   return {
     ...DEFAULT_SITE_CONFIG,
     ...config,

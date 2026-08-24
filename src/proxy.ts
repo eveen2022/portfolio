@@ -7,9 +7,33 @@ import type { SiteConfig } from "@/lib/types";
 // proxy.ts runs in on some deployment platforms.
 type SiteStatus = Pick<SiteConfig, "maintenanceMode" | "notFoundMode" | "sections">;
 
+const OPEN_SITE_STATUS: SiteStatus = {
+  maintenanceMode: false,
+  notFoundMode: false,
+  sections: {
+    about: true,
+    skills: true,
+    projects: true,
+    experience: true,
+    education: true,
+    blog: true,
+    contact: true,
+  },
+};
+
+// This runs on every non-admin request. If the status endpoint is
+// unreachable or errors (DB down, misconfigured env vars, cold-start hiccup),
+// failing open and letting the real site render beats taking down every
+// route in the app over what should only ever gate maintenance/404 mode.
 async function fetchSiteStatus(request: NextRequest): Promise<SiteStatus> {
-  const res = await fetch(new URL("/api/internal/site-status", request.url));
-  return res.json();
+  try {
+    const res = await fetch(new URL("/api/internal/site-status", request.url));
+    if (!res.ok) throw new Error(`site-status responded ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error("proxy: fetchSiteStatus failed, failing open —", error);
+    return OPEN_SITE_STATUS;
+  }
 }
 
 // Route prefixes gated by a single sections.* flag.

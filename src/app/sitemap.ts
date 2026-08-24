@@ -7,12 +7,23 @@ import { siteMeta } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [projects, posts, timeline, siteConfig] = await Promise.all([
-    getProjects(),
-    getPosts(),
-    getTimeline(),
-    getSiteConfig(),
-  ]);
+  // getSiteConfig() already falls back to defaults on failure; projects/
+  // posts/timeline can still throw if the DB is unreachable — a crawler
+  // hitting /sitemap.xml during an outage should get "no extra URLs", not a
+  // 500 for the whole route.
+  let projects: Awaited<ReturnType<typeof getProjects>> = [];
+  let posts: Awaited<ReturnType<typeof getPosts>> = [];
+  let timeline: Awaited<ReturnType<typeof getTimeline>> = [];
+  const siteConfig = await getSiteConfig();
+  try {
+    [projects, posts, timeline] = await Promise.all([
+      getProjects(),
+      getPosts(),
+      getTimeline(),
+    ]);
+  } catch (error) {
+    console.error("sitemap: content fetch failed, returning static routes only —", error);
+  }
   const { sections } = siteConfig;
 
   // Site-wide SEO kill switch — nothing should be indexed, so nothing
